@@ -10,14 +10,18 @@ import PhotosUI
 
 struct PoCTestView: View {
     @State private var selectedItems: [PhotosPickerItem] = []
+    @StateObject private var bannerPhotoLoader = BannerPhotoLoader()
 
     var body: some View {
         VStack {
             PhotosPicker(selection: $selectedItems, matching: .images) {
                 Text("사진 선택")
             }.onChange(of: selectedItems) { _, newItems in
-                loadImages(newItems)
-                loadAssetInfo(from: newItems)
+
+                Task {
+                    await bannerPhotoLoader.loadPhotos(from: newItems)
+                }
+
             }
         }
         .padding()
