@@ -10,8 +10,7 @@ import SwiftUI
 
 struct MapView: View {
     @StateObject private var locationManager = LocationManager()
-    @State private var cameraPosition: MapCameraPosition = .automatic
-    @Namespace var mapScope
+    @State private var cameraPosition: MapCameraPosition = .userLocation(fallback: .automatic)
 
     var body: some View {
         Map(position: $cameraPosition) {
