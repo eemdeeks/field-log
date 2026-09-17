@@ -17,24 +17,36 @@
 
 ## Architecture — Butterfly Architecture (Clean Architecture)
 
-Domain을 중심(몸통)으로 Presentation과 Data가 좌우 날개처럼 대칭적으로, 서로 완전히 독립적으로 뻗어나가는 구조.
+Domain을 중심(몸통)으로, 왼쪽 날개는 UI → Presentation → Domain, 오른쪽 날개는 Domain ← Data ← Storage/Network. 각 레이어는 바로 안쪽 레이어만 의존하고, 두 단계 이상 건너뛰거나 반대 방향으로 의존하지 않는다.
+
+```
+UI → Presentation → Domain ← Data ← Storage
+                                  ← Network
+```
 
 **의존성 규칙 (반드시 지킨다):**
-- Domain은 Data와 Presentation 둘 다 모른다 — 프레임워크 import 금지, 순수 Swift만
-- Presentation → Domain에만 의존한다. Data를 직접 import하지 않는다
-- Data → Domain에만 의존한다 (Domain이 정의한 Repository protocol을 구현). Presentation을 직접 import하지 않는다
-- Data와 Presentation은 서로를 전혀 모른다 — 둘 다 Domain을 통해서만 간접적으로 이어지고, 실제 객체 연결은 컴포지션 루트(App 진입점)에서 DI로 한다
+- **Domain**: 아무것도 모른다. 프레임워크 import 금지, 순수 Swift만
+- **Presentation(ViewModel)**: Domain에만 의존한다. UI와 Data를 모른다
+- **UI(View)**: Presentation에만 의존한다. Domain·Data를 직접 모른다
+- **Data(Repository)**: Domain에만 의존한다. Storage와 Network를 직접 import하지 않는다 — DataSource protocol을 정의하고, 구현체는 컴포지션 루트(App 진입점)에서 DI로 주입받는다
+- **Storage(Persistence)**: Data가 정의한 DataSource protocol을 구현한다. Network를 모른다
+- **Network**: Data가 정의한 DataSource protocol을 구현한다. Storage를 모른다
+- Storage와 Network는 서로를 전혀 모른다
+- 모든 레이어 간 실제 객체 연결은 컴포지션 루트(App 진입점)에서만 한다
 
 **레이어별 구성:**
-- **Domain**: Entity, Model, UseCase, Repository protocol(인터페이스), Domain 유닛 테스트
-- **Presentation**: View, ViewModel — Domain의 UseCase/Repository protocol에만 의존
-- **Data**: Repository 구현체 + Data 내부용 인터페이스. 추후 Persistence(로컬 저장소, SwiftData)와 Network로 나뉜다 — 이 둘은 서로 모른다. Data의 Repository 구현체가 Persistence/Network를 조합해서 사용한다
+- **Domain**: Entity, UseCase, Repository protocol — 순수 Swift
+- **Presentation**: ViewModel — Domain UseCase에만 의존, View (SwiftUI) — Presentation에만 의존
+    - 다만 View와 ViewModel은 세트로 판단할 수 있기 때문에, Presentation 안에 각 UI별로 View와 ViewModel은 묶어서 관리한다.
+- **Data**: Repository 구현체 + DataSource protocol(내부 인터페이스) — Domain에만 의존
+- **Storage(Persistence)**: DataSource protocol 구현체 (SwiftData 등) — Data에만 의존
+- **Network**: DataSource protocol 구현체 (URLSession 등) — Data에만 의존
 
-새 기능은 "Domain(Entity + UseCase + Repository protocol) → Data(Repository 구현체 + mapper) → Presentation(ViewModel)" 순서로 만들되, Data와 Presentation 코드는 서로 import하지 않는다.
+새 기능 구현 순서: Domain(Entity → UseCase → Repository protocol) → Data(Repository 구현체 → DataSource protocol) → Storage(DataSource 구현체) → Presentation(ViewModel) → UI(View). 각 레이어는 인접 안쪽 레이어 외에는 import하지 않는다.
 
 ## SwiftData
 
-- Repository 구현체는 클래스 전체에 `@MainActor`를 붙인다. 백그라운드 스레드 진입점이 없는 한 메서드별 actor hopping을 하지 않는다
+- Repository 구현체와 Storage DataSource 구현체 모두 클래스 전체에 `@MainActor`를 붙인다. 백그라운드 스레드 진입점이 없는 한 메서드별 actor hopping을 하지 않는다
 - 스키마 버전이 바뀌면 `VersionedSchema`를 사용하고 마이그레이션 plan을 명시한다
 
 ### View 리프레시 전략: 명시적 재조회 (확정)
