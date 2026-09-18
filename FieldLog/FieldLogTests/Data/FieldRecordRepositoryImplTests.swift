@@ -6,19 +6,31 @@
 //
 
 import Foundation
-import SwiftData
 import Testing
 @testable import FieldLog
 
-// MARK: - Helper
+// MARK: - Fake DataSource
 
-/// 매 테스트마다 새 in-memory 컨테이너를 만들어 독립성 보장.
-/// ModelContainer는 nonisolated로 생성하고, mainContext·RepositoryImpl만 MainActor.run 안에서 초기화한다.
-private func makeInMemoryRepository() async throws -> FieldRecordRepositoryImpl {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try ModelContainer(for: FieldRecordModel.self, configurations: config)
-    return await MainActor.run {
-        FieldRecordRepositoryImpl(context: container.mainContext)
+/// 배열 기반 가짜 DataSource. Repository가 DataSource에 올바르게 위임하는지만 검증한다.
+@MainActor
+final class FakeFieldRecordLocalDataSource: FieldRecordLocalDataSource {
+    var records: [FieldRecord] = []
+
+    func create(_ record: FieldRecord) throws {
+        records.append(record)
+    }
+
+    func fetchAll() throws -> [FieldRecord] {
+        return records
+    }
+
+    func update(_ record: FieldRecord) throws {
+        guard let index = records.firstIndex(where: { $0.id == record.id }) else { return }
+        records[index] = record
+    }
+
+    func delete(id: UUID) throws {
+        records.removeAll { $0.id == id }
     }
 }
 
@@ -26,16 +38,22 @@ private func makeInMemoryRepository() async throws -> FieldRecordRepositoryImpl 
 
 @Suite("FieldRecordRepositoryImpl")
 struct FieldRecordRepositoryImplTests {
+    let repo: FieldRecordRepositoryImpl
+
+    init() async {
+        repo = await MainActor.run {
+            FieldRecordRepositoryImpl(local: FakeFieldRecordLocalDataSource())
+        }
+    }
 
     @Test("create 후 fetchAll 시 1건이 저장되고 필드가 일치한다")
     func createAndFetch() async throws {
-        let repo = try await makeInMemoryRepository()
         let record = FieldRecord(id: UUID(), timestamp: .now, latitude: 37.5665, longitude: 126.9780, memo: "서울시청")
 
         try await repo.create(record)
         let fetched = try await repo.fetchAll()
 
-        #expect(fetched.count == 1)
+        try #require(fetched.count == 1)
         #expect(fetched[0].id == record.id)
         #expect(fetched[0].latitude == record.latitude)
         #expect(fetched[0].longitude == record.longitude)
@@ -44,7 +62,6 @@ struct FieldRecordRepositoryImplTests {
 
     @Test("update 후 fetchAll 시 memo가 변경된다")
     func updateMemo() async throws {
-        let repo = try await makeInMemoryRepository()
         let id = UUID()
         let timestamp = Date.now
         let original = FieldRecord(id: id, timestamp: timestamp, latitude: 37.5, longitude: 127.0, memo: nil)
@@ -54,12 +71,11 @@ struct FieldRecordRepositoryImplTests {
         try await repo.update(updated)
 
         let fetched = try await repo.fetchAll()
-        #expect(fetched[0].memo == "수정됨")
+        #expect(fetched.first?.memo == "수정됨")
     }
 
     @Test("delete 후 fetchAll 시 0건이다")
     func deleteRecord() async throws {
-        let repo = try await makeInMemoryRepository()
         let record = FieldRecord(id: UUID(), timestamp: .now, latitude: 37.5, longitude: 127.0, memo: nil)
         try await repo.create(record)
 
@@ -67,20 +83,5 @@ struct FieldRecordRepositoryImplTests {
 
         let fetched = try await repo.fetchAll()
         #expect(fetched.isEmpty)
-    }
-
-    @Test("fetchAll은 timestamp 내림차순으로 반환한다")
-    func fetchSortedByTimestampDescending() async throws {
-        let repo = try await makeInMemoryRepository()
-        let older = FieldRecord(id: UUID(), timestamp: Date(timeIntervalSinceNow: -3600), latitude: 37.0, longitude: 127.0, memo: "older")
-        let newer = FieldRecord(id: UUID(), timestamp: Date(timeIntervalSinceNow: 0), latitude: 37.1, longitude: 127.1, memo: "newer")
-
-        try await repo.create(older)
-        try await repo.create(newer)
-
-        let fetched = try await repo.fetchAll()
-        #expect(fetched.count == 2)
-        #expect(fetched[0].memo == "newer")
-        #expect(fetched[1].memo == "older")
     }
 }
