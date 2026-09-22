@@ -1,17 +1,20 @@
-//
+
 //  FieldLogApp.swift
 //  FieldLog
-//
-//  Created by 박승찬 on 8/26/26.
-//
 
 import SwiftUI
 
 @main
 struct FieldLogApp: App {
+    private let addRecordViewModel = AddRecordViewModel(
+        extractMetadata: ExtractPhotoMetadataUseCase(
+            extractor: ImageIOPhotoMetadataExtractor()
+        )
+    )
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(addRecordViewModel: addRecordViewModel)
         }
     }
 }
