@@ -44,6 +44,22 @@ UI → Presentation → Domain ← Data ← Storage
 
 새 기능 구현 순서: Domain(Entity → UseCase → Repository protocol) → Data(Repository 구현체 → DataSource protocol) → Storage(DataSource 구현체) → Presentation(ViewModel) → UI(View). 각 레이어는 인접 안쪽 레이어 외에는 import하지 않는다.
 
+**오른쪽 날개 계층 깊이 판단 기준:**
+
+오른쪽 날개가 **상태 있는 저장소(CRUD)**일 때만 Repository/DataSource 5계층을 쓴다. `RepositoryImpl`이 존재하는 이유는 local/remote DataSource를 조합하는 조율자 역할 때문이다. 따라서 조합할 DataSource가 하나뿐이고 상태가 없는 **순수 변환(`Data → 값`)**이라면 5계층은 투기적 계층이다.
+
+이 경우 **Domain protocol → 날개 구현체의 3계층으로 축소**하고, protocol 이름을 `...Repository`가 아닌 `...Extracting`/`...ing`(서비스)으로 두어 저장소가 아님을 드러낸다.
+
+- **5계층 적용:** "합성할 DataSource가 둘 이상 생길 여지가 있는가?" → YES (예: FieldRecord — local SwiftData + 추후 remote API)
+- **3계층 적용:** "합성할 DataSource가 둘 이상 생길 여지가 있는가?" → NO (예: EXIF 추출 — ImageIO 외 대안 없음)
+
+3계층 구조:
+```
+Domain:  SomeValueExtracting (protocol) + SomeEntity + ExtractSomethingUseCase
+날개:    FrameworkSomeExtractor (implements SomeValueExtracting)
+```
+의존성 방향과 컴포지션 루트 DI 원칙은 5계층과 동일하다. 계층 수만 다를 뿐이다.
+
 ## SwiftData
 
 - Repository 구현체와 Storage DataSource 구현체 모두 클래스 전체에 `@MainActor`를 붙인다. 백그라운드 스레드 진입점이 없는 한 메서드별 actor hopping을 하지 않는다
