@@ -28,7 +28,6 @@ final class AddRecordViewModel {
         for item in pickerItems {
             guard let data = try? await item.loadTransferable(type: Data.self) else { continue }
             if let metadata = try? await extractMetadata(data) {
-                print(metadata)
                 results.append(metadata)
             }
         }
