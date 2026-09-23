@@ -24,7 +24,7 @@ final class ImageIOPhotoMetadataExtractor: PhotoMetadataExtracting {
         )
     }
 
-    private func extractCoordinate(from properties: [CFString: Any]?) -> PhotoCoordinate? {
+    private func extractCoordinate(from properties: [CFString: Any]?) -> Coordinate? {
         guard
             let gps = properties?[kCGImagePropertyGPSDictionary] as? [CFString: Any],
             let lat = gps[kCGImagePropertyGPSLatitude] as? Double,
@@ -36,7 +36,7 @@ final class ImageIOPhotoMetadataExtractor: PhotoMetadataExtracting {
             lat != 0.0 || lon != 0.0
         else { return nil }
 
-        return PhotoCoordinate(
+        return Coordinate(
             latitude: latRef == "S" ? -lat : lat,
             longitude: lonRef == "W" ? -lon : lon
         )

@@ -9,6 +9,23 @@ import Foundation
 import Testing
 @testable import FieldLog
 
+// MARK: - Test Helper
+
+private extension FieldRecord {
+    static func make(
+        id: UUID = UUID(),
+        coordinate: Coordinate = Coordinate(latitude: 37.5, longitude: 127.0),
+        createdAt: Date = .now,
+        memo: String? = nil
+    ) -> FieldRecord {
+        let photo = Photo(
+            imageData: Data([0xFF, 0xD8]),
+            metadata: PhotoMetadata(coordinate: coordinate, capturedAt: nil)
+        )
+        return FieldRecord(id: id, coordinate: coordinate, createdAt: createdAt, memo: memo, photo: photo)
+    }
+}
+
 // MARK: - Fake Repository
 
 /// 배열 기반 가짜 Repository. UseCase가 올바른 메서드로 위임하는지만 검증한다.
@@ -50,7 +67,7 @@ struct CreateFieldRecordUseCaseTests {
     func delegatesToRepository() async throws {
         let repo = FakeFieldRecordRepository()
         let useCase = CreateFieldRecordUseCase(repository: repo)
-        let record = FieldRecord(id: UUID(), timestamp: .now, latitude: 37.5, longitude: 127.0, memo: nil)
+        let record = FieldRecord.make()
 
         try await useCase(record)
 
@@ -64,7 +81,7 @@ struct FetchFieldRecordsUseCaseTests {
     @Test("fetch 호출 시 repository.fetchAll로 위임하고 결과를 반환한다")
     func delegatesToRepository() async throws {
         let repo = FakeFieldRecordRepository()
-        let record = FieldRecord(id: UUID(), timestamp: .now, latitude: 37.5, longitude: 127.0, memo: "test")
+        let record = FieldRecord.make(memo: "test")
         repo.records = [record]
         let useCase = FetchFieldRecordsUseCase(repository: repo)
 
@@ -82,9 +99,9 @@ struct UpdateFieldRecordUseCaseTests {
     @Test("update 호출 시 repository.update로 위임한다")
     func delegatesToRepository() async throws {
         let repo = FakeFieldRecordRepository()
-        let original = FieldRecord(id: UUID(), timestamp: .now, latitude: 37.5, longitude: 127.0, memo: nil)
+        let original = FieldRecord.make()
         repo.records = [original]
-        let updated = FieldRecord(id: original.id, timestamp: original.timestamp, latitude: original.latitude, longitude: original.longitude, memo: "updated")
+        let updated = FieldRecord(id: original.id, coordinate: original.coordinate, createdAt: original.createdAt, memo: "updated", photo: original.photo)
         let useCase = UpdateFieldRecordUseCase(repository: repo)
 
         try await useCase(updated)
@@ -99,7 +116,7 @@ struct DeleteFieldRecordUseCaseTests {
     @Test("delete 호출 시 repository.delete로 위임한다")
     func delegatesToRepository() async throws {
         let repo = FakeFieldRecordRepository()
-        let record = FieldRecord(id: UUID(), timestamp: .now, latitude: 37.5, longitude: 127.0, memo: nil)
+        let record = FieldRecord.make()
         repo.records = [record]
         let useCase = DeleteFieldRecordUseCase(repository: repo)
 
