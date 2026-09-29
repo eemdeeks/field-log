@@ -39,7 +39,8 @@ struct MapView: View {
         let repository = FieldRecordRepositoryImpl(local: dataSource)
         return AddRecordViewModel(
             extractMetadata: ExtractPhotoMetadataUseCase(extractor: ImageIOPhotoMetadataExtractor()),
-            createRecord: CreateFieldRecordUseCase(repository: repository)
+            createRecord: CreateFieldRecordUseCase(repository: repository),
+            fetchRecords: FetchFieldRecordsUseCase(repository: repository)
         )
     }
     return MapView(addRecordViewModel: makeViewModel())

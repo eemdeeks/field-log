@@ -24,7 +24,8 @@ struct FieldLogApp: App {
         let repository = FieldRecordRepositoryImpl(local: dataSource)
         addRecordViewModel = AddRecordViewModel(
             extractMetadata: ExtractPhotoMetadataUseCase(extractor: ImageIOPhotoMetadataExtractor()),
-            createRecord: CreateFieldRecordUseCase(repository: repository)
+            createRecord: CreateFieldRecordUseCase(repository: repository),
+            fetchRecords: FetchFieldRecordsUseCase(repository: repository)
         )
     }
 

@@ -15,7 +15,11 @@ struct AddRecordSheetView: View {
                 extractedResultsSection
                 saveSection
             }
+            if !viewModel.records.isEmpty {
+                savedRecordsSection
+            }
         }
+        .task { await viewModel.loadRecords() }
         .onChange(of: viewModel.pickerItems) {
             Task { await viewModel.handlePickerChange() }
         }
@@ -48,6 +52,19 @@ struct AddRecordSheetView: View {
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                     }
+                }
+            }
+        }
+    }
+
+    private var savedRecordsSection: some View {
+        Section("저장된 기록 (\(viewModel.records.count)장)") {
+            ForEach(viewModel.records) { record in
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("위도 \(record.coordinate.latitude, format: .number.precision(.fractionLength(5))), 경도 \(record.coordinate.longitude, format: .number.precision(.fractionLength(5)))")
+                    Text(record.createdAt.formatted(date: .abbreviated, time: .shortened))
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
                 }
             }
         }

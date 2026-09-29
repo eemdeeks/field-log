@@ -10,15 +10,22 @@ import SwiftUI
 final class AddRecordViewModel {
     var pickerItems: [PhotosPickerItem] = []
     var extracted: [Photo] = []
+    var records: [FieldRecord] = []
     var isExtracting = false
     var isSaving = false
 
     private let extractMetadata: ExtractPhotoMetadataUseCase
     private let createRecord: CreateFieldRecordUseCase
+    private let fetchRecords: FetchFieldRecordsUseCase
 
-    init(extractMetadata: ExtractPhotoMetadataUseCase, createRecord: CreateFieldRecordUseCase) {
+    init(
+        extractMetadata: ExtractPhotoMetadataUseCase,
+        createRecord: CreateFieldRecordUseCase,
+        fetchRecords: FetchFieldRecordsUseCase
+    ) {
         self.extractMetadata = extractMetadata
         self.createRecord = createRecord
+        self.fetchRecords = fetchRecords
     }
 
     /// EXIF GPS가 있어 자동 저장 가능한 사진 수. UI 표시용.
@@ -42,6 +49,10 @@ final class AddRecordViewModel {
         extracted = results
     }
 
+    func loadRecords() async {
+        records = (try? await fetchRecords()) ?? []
+    }
+
     /// EXIF GPS가 있는 사진만 FieldRecord로 변환해 저장. GPS 없는 사진은 건너뜀.
     func save() async {
         isSaving = true
@@ -52,5 +63,6 @@ final class AddRecordViewModel {
         }
         extracted = []
         pickerItems = []
+        await loadRecords()
     }
 }
