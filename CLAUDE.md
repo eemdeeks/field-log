@@ -17,7 +17,7 @@
 
 ## Architecture — Butterfly Architecture (Clean Architecture)
 
-Domain을 중심(몸통)으로, 왼쪽 날개는 UI → Presentation → Domain, 오른쪽 날개는 Domain ← Data ← Storage/Network. 각 레이어는 바로 안쪽 레이어만 의존하고, 두 단계 이상 건너뛰거나 반대 방향으로 의존하지 않는다.
+Domain을 중심(몸통)으로, 왼쪽 날개는 UI → Presentation → Domain, 오른쪽 날개는 Domain ← Data ← Storage/Network. 의존성은 항상 안쪽(Domain 방향)으로만 향한다. 바깥 레이어는 자신보다 안쪽이면 단계를 건너뛰어 참조해도 된다. 금지되는 것은 방향 역전(Domain이 Storage·SwiftData를 아는 것)뿐이다.
 
 ```
 UI → Presentation → Domain ← Data ← Storage
