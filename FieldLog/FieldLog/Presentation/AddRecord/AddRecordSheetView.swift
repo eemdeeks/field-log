@@ -38,7 +38,7 @@ struct AddRecordSheetView: View {
 
     private var extractedResultsSection: some View {
         Section("추출된 정보 (\(viewModel.extracted.count)장)") {
-            ForEach(viewModel.extracted, id: \.imageData) { photo in
+            ForEach(viewModel.extracted) { photo in
                 let metadata = photo.metadata
                 VStack(alignment: .leading, spacing: 4) {
                     if let coord = metadata.coordinate {
