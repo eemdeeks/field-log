@@ -12,7 +12,7 @@ import Testing
 final class FakePhotoMetadataExtractor: PhotoMetadataExtracting, @unchecked Sendable {
     var extractCallCount = 0
     var stubbedResult: PhotoMetadata = PhotoMetadata(
-        coordinate: PhotoCoordinate(latitude: 37.5, longitude: 127.0),
+        coordinate: Coordinate(latitude: 37.5, longitude: 127.0),
         capturedAt: Date(timeIntervalSince1970: 0)
     )
 

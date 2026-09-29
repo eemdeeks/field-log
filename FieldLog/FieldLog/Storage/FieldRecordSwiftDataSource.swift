@@ -25,7 +25,7 @@ final class FieldRecordSwiftDataSource: FieldRecordLocalDataSource {
 
     func fetchAll() throws -> [FieldRecord] {
         let descriptor = FetchDescriptor<FieldRecordModel>(
-            sortBy: [SortDescriptor(\.timestamp, order: .reverse)]
+            sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
         return try context.fetch(descriptor).map { $0.toDomain() }
     }

@@ -3,6 +3,7 @@
 //  FieldLog
 
 import MapKit
+import SwiftData
 import SwiftUI
 
 struct MapView: View {
@@ -32,11 +33,15 @@ struct MapView: View {
 }
 
 #Preview {
-    MapView(
-        addRecordViewModel: AddRecordViewModel(
-            extractMetadata: ExtractPhotoMetadataUseCase(
-                extractor: ImageIOPhotoMetadataExtractor()
-            )
+    @MainActor func makeViewModel() -> AddRecordViewModel {
+        let container = try! ModelContainer(for: FieldRecordModel.self, PhotoModel.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let dataSource = FieldRecordSwiftDataSource(context: container.mainContext)
+        let repository = FieldRecordRepositoryImpl(local: dataSource)
+        return AddRecordViewModel(
+            extractMetadata: ExtractPhotoMetadataUseCase(extractor: ImageIOPhotoMetadataExtractor()),
+            createRecord: CreateFieldRecordUseCase(repository: repository),
+            fetchRecords: FetchFieldRecordsUseCase(repository: repository)
         )
-    )
+    }
+    return MapView(addRecordViewModel: makeViewModel())
 }
