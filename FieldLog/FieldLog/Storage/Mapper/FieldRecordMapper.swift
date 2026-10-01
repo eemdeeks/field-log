@@ -16,7 +16,8 @@ extension PhotoModel {
         }()
         return Photo(
             imageData: imageData,
-            metadata: PhotoMetadata(coordinate: coordinate, capturedAt: capturedAt)
+            metadata: PhotoMetadata(coordinate: coordinate, capturedAt: capturedAt),
+            thumbnailData: thumbnailData
         )
     }
 }
@@ -25,6 +26,7 @@ extension Photo {
     func toModel() -> PhotoModel {
         PhotoModel(
             imageData: imageData,
+            thumbnailData: thumbnailData,
             exifLatitude: metadata.coordinate?.latitude,
             exifLongitude: metadata.coordinate?.longitude,
             capturedAt: metadata.capturedAt
