@@ -17,7 +17,7 @@ struct MapView: View {
             UserAnnotation()
             ForEach(addRecordViewModel.records) { record in
                 if let thumbnailData = record.photo.thumbnailData {
-                    Annotation("", coordinate: record.coordinate.clLocationCoordinate2D) {
+                    Annotation("배너", coordinate: record.coordinate.clLocationCoordinate2D) {
                         BannerAnnotationView(thumbnailData: thumbnailData, count: 1)
                     }
                 }

@@ -11,12 +11,14 @@ struct BannerAnnotationView: View {
     let thumbnailData: Data
     let count: Int
 
+    @State private var cachedImage: UIImage?
+
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            thumbnailImage
+            thumbnailImageView
                 .frame(width: 44, height: 44)
                 .clipShape(Circle())
-                .overlay(Circle().stroke(.white, lineWidth: 2))
+                .overlay { Circle().stroke(.white, lineWidth: 2) }
                 .shadow(radius: 3)
 
             if count > 1 {
@@ -29,22 +31,29 @@ struct BannerAnnotationView: View {
                     .offset(x: 6, y: -6)
             }
         }
+        .accessibilityLabel("배너")
+        // id: thumbnailData — 데이터가 바뀌면 이전 Task를 취소하고 재실행.
+        // byPreparingForDisplay: 백그라운드에서 미리 디코딩해 메인 스레드 부담을 줄인다.
+        .task(id: thumbnailData) {
+            cachedImage = await UIImage(data: thumbnailData)?.byPreparingForDisplay()
+        }
     }
 
     @ViewBuilder
-    private var thumbnailImage: some View {
-        if let uiImage = UIImage(data: thumbnailData) {
-            Image(uiImage: uiImage)
+    private var thumbnailImageView: some View {
+        if let image = cachedImage {
+            Image(uiImage: image)
                 .resizable()
                 .scaledToFill()
+                .accessibilityHidden(true)
         } else {
-            // 썸네일 디코딩 실패 시 fallback
             Image(systemName: "photo")
                 .resizable()
                 .scaledToFit()
                 .padding(8)
                 .foregroundStyle(.secondary)
                 .background(.thinMaterial)
+                .accessibilityHidden(true)
         }
     }
 }
