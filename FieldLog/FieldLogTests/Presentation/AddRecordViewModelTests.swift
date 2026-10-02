@@ -28,7 +28,10 @@ struct AddRecordViewModelTests {
         let repository = FieldRecordRepositoryImpl(local: fake)
         let vm = AddRecordViewModel(
             extractMetadata: ExtractPhotoMetadataUseCase(extractor: StubExtractor()),
-            createRecord: CreateFieldRecordUseCase(repository: repository),
+            createRecord: CreateFieldRecordUseCase(
+                repository: repository,
+                thumbnailGenerator: FakeThumbnailGenerator()
+            ),
             fetchRecords: FetchFieldRecordsUseCase(repository: repository)
         )
         return (vm, fake)

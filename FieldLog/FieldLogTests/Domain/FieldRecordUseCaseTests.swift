@@ -26,6 +26,23 @@ private extension FieldRecord {
     }
 }
 
+// MARK: - Fake ThumbnailGenerator
+
+/// 고정 Data를 반환하는 가짜 ThumbnailGenerator.
+final class FakeThumbnailGenerator: ThumbnailGenerating {
+    let returnValue: Data?
+    var callCount = 0
+
+    init(returnValue: Data? = Data([0x01])) {
+        self.returnValue = returnValue
+    }
+
+    func thumbnail(from imageData: Data, targetSize: Int) -> Data? {
+        callCount += 1
+        return returnValue
+    }
+}
+
 // MARK: - Fake Repository
 
 /// 배열 기반 가짜 Repository. UseCase가 올바른 메서드로 위임하는지만 검증한다.
@@ -66,13 +83,42 @@ struct CreateFieldRecordUseCaseTests {
     @Test("create 호출 시 repository.create로 위임한다")
     func delegatesToRepository() async throws {
         let repo = FakeFieldRecordRepository()
-        let useCase = CreateFieldRecordUseCase(repository: repo)
+        let useCase = CreateFieldRecordUseCase(repository: repo, thumbnailGenerator: FakeThumbnailGenerator())
         let record = FieldRecord.make()
 
         try await useCase(record)
 
         #expect(repo.createCallCount == 1)
         #expect(repo.records.first?.id == record.id)
+    }
+
+    @Test("저장된 레코드의 photo에 썸네일이 첨부된다")
+    func thumbnailIsAttachedToSavedRecord() async throws {
+        let expectedThumb = Data([0xAB, 0xCD])
+        let repo = FakeFieldRecordRepository()
+        let useCase = CreateFieldRecordUseCase(
+            repository: repo,
+            thumbnailGenerator: FakeThumbnailGenerator(returnValue: expectedThumb)
+        )
+        let record = FieldRecord.make()
+
+        try await useCase(record)
+
+        #expect(repo.records.first?.photo.thumbnailData == expectedThumb)
+    }
+
+    @Test("썸네일 생성 실패(nil)에도 저장은 성공한다")
+    func saveSuceedsWhenThumbnailIsNil() async throws {
+        let repo = FakeFieldRecordRepository()
+        let useCase = CreateFieldRecordUseCase(
+            repository: repo,
+            thumbnailGenerator: FakeThumbnailGenerator(returnValue: nil)
+        )
+
+        try await useCase(FieldRecord.make())
+
+        #expect(repo.createCallCount == 1)
+        #expect(repo.records.first?.photo.thumbnailData == nil)
     }
 }
 
