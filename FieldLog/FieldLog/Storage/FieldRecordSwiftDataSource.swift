@@ -42,6 +42,17 @@ final class FieldRecordSwiftDataSource: FieldRecordLocalDataSource {
         try context.save()
     }
 
+    /// address만 갱신한다. 역지오코딩 결과를 채우는 전용 경로.
+    func updateAddress(id: UUID, address: String) throws {
+        var descriptor = FetchDescriptor<FieldRecordModel>(
+            predicate: #Predicate { $0.id == id }
+        )
+        descriptor.fetchLimit = 1
+        guard let model = try context.fetch(descriptor).first else { return }
+        model.address = address
+        try context.save()
+    }
+
     func delete(id: UUID) throws {
         try context.delete(model: FieldRecordModel.self, where: #Predicate { $0.id == id })
         try context.save()
