@@ -41,6 +41,7 @@ extension FieldRecordModel {
             coordinate: Coordinate(latitude: latitude, longitude: longitude),
             createdAt: createdAt,
             memo: memo,
+            address: address,
             photo: photo.toDomain()
         )
     }
@@ -54,6 +55,7 @@ extension FieldRecord {
             longitude: coordinate.longitude,
             createdAt: createdAt,
             memo: memo,
+            address: address,
             photo: photo.toModel()
         )
     }

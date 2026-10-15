@@ -32,7 +32,12 @@ struct AddRecordViewModelTests {
                 repository: repository,
                 thumbnailGenerator: FakeThumbnailGenerator()
             ),
-            fetchRecords: FetchFieldRecordsUseCase(repository: repository)
+            fetchRecords: FetchFieldRecordsUseCase(repository: repository),
+            reverseGeocode: ReverseGeocodeFieldRecordUseCase(
+                geocoder: NoOpGeocodingService(),
+                repository: repository
+            ),
+            addressFillInterval: .zero
         )
         return (vm, fake)
     }
@@ -89,5 +94,13 @@ struct AddRecordViewModelTests {
 private final class StubExtractor: PhotoMetadataExtracting, @unchecked Sendable {
     func extract(from imageData: Data) async throws -> PhotoMetadata {
         PhotoMetadata(coordinate: nil, capturedAt: nil)
+    }
+}
+
+// MARK: - No-Op GeocodingService (기존 save 테스트에서 지오코딩이 개입하지 않게)
+
+private final class NoOpGeocodingService: GeocodingService, @unchecked Sendable {
+    func reverseGeocode(_ coordinate: Coordinate) async throws -> String {
+        throw GeocodingError.noResult
     }
 }

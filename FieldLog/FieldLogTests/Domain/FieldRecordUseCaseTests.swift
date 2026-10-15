@@ -9,23 +9,6 @@ import Foundation
 import Testing
 @testable import FieldLog
 
-// MARK: - Test Helper
-
-private extension FieldRecord {
-    static func make(
-        id: UUID = UUID(),
-        coordinate: Coordinate = Coordinate(latitude: 37.5, longitude: 127.0),
-        createdAt: Date = .now,
-        memo: String? = nil
-    ) -> FieldRecord {
-        let photo = Photo(
-            imageData: Data([0xFF, 0xD8]),
-            metadata: PhotoMetadata(coordinate: coordinate, capturedAt: nil)
-        )
-        return FieldRecord(id: id, coordinate: coordinate, createdAt: createdAt, memo: memo, photo: photo)
-    }
-}
-
 // MARK: - Fake ThumbnailGenerator
 
 /// 고정 Data를 반환하는 가짜 ThumbnailGenerator.
@@ -51,6 +34,7 @@ final class FakeFieldRecordRepository: FieldRecordRepository, @unchecked Sendabl
     var createCallCount = 0
     var fetchCallCount = 0
     var updateCallCount = 0
+    var updateAddressCallCount = 0
     var deleteCallCount = 0
 
     func create(_ record: FieldRecord) async throws {
@@ -67,6 +51,13 @@ final class FakeFieldRecordRepository: FieldRecordRepository, @unchecked Sendabl
         updateCallCount += 1
         if let index = records.firstIndex(where: { $0.id == record.id }) {
             records[index] = record
+        }
+    }
+
+    func updateAddress(id: UUID, address: String) async throws {
+        updateAddressCallCount += 1
+        if let index = records.firstIndex(where: { $0.id == id }) {
+            records[index].address = address
         }
     }
 

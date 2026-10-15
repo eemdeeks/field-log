@@ -22,13 +22,23 @@ struct FieldLogApp: App {
 
         let dataSource = FieldRecordSwiftDataSource(context: container.mainContext)
         let repository = FieldRecordRepositoryImpl(local: dataSource)
+        let geocoderService: any GeocodingService
+        if #available(iOS 26, *) {
+            geocoderService = MKGeocoderService()
+        } else {
+            geocoderService = CLGeocoderService()
+        }
         addRecordViewModel = AddRecordViewModel(
             extractMetadata: ExtractPhotoMetadataUseCase(extractor: ImageIOPhotoMetadataExtractor()),
             createRecord: CreateFieldRecordUseCase(
                 repository: repository,
                 thumbnailGenerator: ImageIOThumbnailGenerator()
             ),
-            fetchRecords: FetchFieldRecordsUseCase(repository: repository)
+            fetchRecords: FetchFieldRecordsUseCase(repository: repository),
+            reverseGeocode: ReverseGeocodeFieldRecordUseCase(
+                geocoder: geocoderService,
+                repository: repository
+            )
         )
     }
 

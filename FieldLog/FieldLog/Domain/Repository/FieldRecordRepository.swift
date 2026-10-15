@@ -14,5 +14,6 @@ protocol FieldRecordRepository: Sendable {
     func create(_ record: FieldRecord) async throws
     func fetchAll() async throws -> [FieldRecord]
     func update(_ record: FieldRecord) async throws
+    func updateAddress(id: UUID, address: String) async throws
     func delete(id: UUID) async throws
 }

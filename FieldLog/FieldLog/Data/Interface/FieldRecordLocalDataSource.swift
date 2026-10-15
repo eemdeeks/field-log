@@ -15,5 +15,6 @@ protocol FieldRecordLocalDataSource {
     func create(_ record: FieldRecord) throws
     func fetchAll() throws -> [FieldRecord]
     func update(_ record: FieldRecord) throws
+    func updateAddress(id: UUID, address: String) throws
     func delete(id: UUID) throws
 }

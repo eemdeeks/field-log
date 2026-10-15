@@ -19,14 +19,16 @@ final class FieldRecordModel {
     var longitude: Double
     var createdAt: Date
     var memo: String?
+    var address: String?
     @Relationship(deleteRule: .cascade) var photo: PhotoModel
 
-    init(id: UUID, latitude: Double, longitude: Double, createdAt: Date, memo: String?, photo: PhotoModel) {
+    init(id: UUID, latitude: Double, longitude: Double, createdAt: Date, memo: String?, address: String? = nil, photo: PhotoModel) {
         self.id = id
         self.latitude = latitude
         self.longitude = longitude
         self.createdAt = createdAt
         self.memo = memo
+        self.address = address
         self.photo = photo
     }
 }

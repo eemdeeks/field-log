@@ -9,23 +9,6 @@ import Foundation
 import Testing
 @testable import FieldLog
 
-// MARK: - Test Helper
-
-private extension FieldRecord {
-    static func make(
-        id: UUID = UUID(),
-        coordinate: Coordinate = Coordinate(latitude: 37.5, longitude: 127.0),
-        createdAt: Date = .now,
-        memo: String? = nil
-    ) -> FieldRecord {
-        let photo = Photo(
-            imageData: Data([0xFF, 0xD8]),
-            metadata: PhotoMetadata(coordinate: coordinate, capturedAt: nil)
-        )
-        return FieldRecord(id: id, coordinate: coordinate, createdAt: createdAt, memo: memo, photo: photo)
-    }
-}
-
 // MARK: - Fake DataSource
 
 /// 배열 기반 가짜 DataSource. Repository가 DataSource에 올바르게 위임하는지만 검증한다.
@@ -44,6 +27,11 @@ final class FakeFieldRecordLocalDataSource: FieldRecordLocalDataSource {
     func update(_ record: FieldRecord) throws {
         guard let index = records.firstIndex(where: { $0.id == record.id }) else { return }
         records[index] = record
+    }
+
+    func updateAddress(id: UUID, address: String) throws {
+        guard let index = records.firstIndex(where: { $0.id == id }) else { return }
+        records[index].address = address
     }
 
     func delete(id: UUID) throws {
@@ -99,5 +87,16 @@ struct FieldRecordRepositoryImplTests {
 
         let fetched = try await repo.fetchAll()
         #expect(fetched.isEmpty)
+    }
+
+    @Test("updateAddress 후 fetchAll 시 address가 변경된다")
+    func updateAddress() async throws {
+        let record = FieldRecord.make()
+        try await repo.create(record)
+
+        try await repo.updateAddress(id: record.id, address: "서울특별시 강남구 테헤란로")
+
+        let fetched = try await repo.fetchAll()
+        #expect(fetched.first?.address == "서울특별시 강남구 테헤란로")
     }
 }

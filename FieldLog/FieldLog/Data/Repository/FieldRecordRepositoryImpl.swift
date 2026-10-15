@@ -29,6 +29,10 @@ final class FieldRecordRepositoryImpl: FieldRecordRepository {
         try local.update(record)
     }
 
+    func updateAddress(id: UUID, address: String) async throws {
+        try local.updateAddress(id: id, address: address)
+    }
+
     func delete(id: UUID) async throws {
         try local.delete(id: id)
     }
