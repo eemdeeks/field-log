@@ -88,4 +88,15 @@ struct FieldRecordRepositoryImplTests {
         let fetched = try await repo.fetchAll()
         #expect(fetched.isEmpty)
     }
+
+    @Test("updateAddress 후 fetchAll 시 address가 변경된다")
+    func updateAddress() async throws {
+        let record = FieldRecord.make()
+        try await repo.create(record)
+
+        try await repo.updateAddress(id: record.id, address: "서울특별시 강남구 테헤란로")
+
+        let fetched = try await repo.fetchAll()
+        #expect(fetched.first?.address == "서울특별시 강남구 테헤란로")
+    }
 }
