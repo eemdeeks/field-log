@@ -56,13 +56,23 @@ private extension Coordinate {
         let container = try! ModelContainer(for: FieldRecordModel.self, PhotoModel.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let dataSource = FieldRecordSwiftDataSource(context: container.mainContext)
         let repository = FieldRecordRepositoryImpl(local: dataSource)
+        let geocoderService: any GeocodingService
+        if #available(iOS 26, *) {
+            geocoderService = MKGeocoderService()
+        } else {
+            geocoderService = CLGeocoderService()
+        }
         return AddRecordViewModel(
             extractMetadata: ExtractPhotoMetadataUseCase(extractor: ImageIOPhotoMetadataExtractor()),
             createRecord: CreateFieldRecordUseCase(
                 repository: repository,
                 thumbnailGenerator: ImageIOThumbnailGenerator()
             ),
-            fetchRecords: FetchFieldRecordsUseCase(repository: repository)
+            fetchRecords: FetchFieldRecordsUseCase(repository: repository),
+            reverseGeocode: ReverseGeocodeFieldRecordUseCase(
+                geocoder: geocoderService,
+                repository: repository
+            )
         )
     }
     return MapView(addRecordViewModel: makeViewModel())
